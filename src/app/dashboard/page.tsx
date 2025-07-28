@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'sonner';
+import { User } from '@supabase/supabase-js';
+
 
 const moodSounds: { [emoji: string]: string } = {
     '😄': '/sounds/happy.mp3',
@@ -34,7 +36,7 @@ const moodVideos: { [emoji: string]: string } = {
 };
 export default function DashboardPage() {
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [mood, setMood] = useState('');
     const [note, setNote] = useState('');
@@ -79,6 +81,12 @@ export default function DashboardPage() {
         }
 
         setSaving(true);
+        if (!user) {
+            toast.error('User not found.');
+            setSaving(false);
+            return;
+        }
+
         const { error } = await supabase.from('moods').insert([
             {
                 user_id: user.id,
@@ -87,6 +95,7 @@ export default function DashboardPage() {
                 timestamp: new Date().toISOString(),
             },
         ]);
+
 
         if (error) {
             toast.error('Failed to save entry.');
